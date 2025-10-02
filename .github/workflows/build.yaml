@@ -1,0 +1,12 @@
+name: Build Keyboard Firmware
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "qmk_firmware/**"
+
+jobs:
+  build:
+    uses: sekigon-gonnoc/vial-keymap-c-editor/.github/workflows/build-keymap.yml@main
