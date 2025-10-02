@@ -43,13 +43,6 @@
 #endif
 #endif
 
-enum paw3222_keycodes {
-    DRGSCRL_V = QK_KB_0, // Set vertical drag scroll mode
-    DRGSCRL_H,           // Set horizontal drag scroll mode
-    DRGSCRL_F,           // Set free drag scroll mode
-};
-#define PAW3222_DRGSCRL_REDUCTION_RATIO 4
-
 typedef struct {
   int16_t x;
   int16_t y;

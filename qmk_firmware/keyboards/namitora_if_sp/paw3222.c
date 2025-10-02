@@ -17,11 +17,7 @@
 
 // https://github.com/shinoaliceKabocha/choco60_track/tree/master/keymaps/default
 
-#include "quantum.h"
-
 #include "pointing_device.h"
-
-#include <math.h> 
 
 #include "debug.h"
 #include "gpio.h"
@@ -45,34 +41,6 @@
 
 #define constrain(amt, low, high)                                              \
   ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
-
-#define DRGSCRL_MODE_OFF  0b00
-#define DRGSCRL_MODE_VRT  0b01
-#define DRGSCRL_MODE_HOR  0b10
-#define DRGSCRL_MODE_FRE  0b11
-typedef union {
-    uint32_t raw;
-    struct {
-        uint8_t  dragscroll_mode: 2; // 00b: off, 01b: vertical, 10b: horizontal, 11b: free
-    } __attribute__((packed));
-} paw3222_config_t;
-static paw3222_config_t g_paw3222_config = {0};
-
-/**
-    Get the current state of drag scroll mode.
-    @return 00b: off, 01b: vertical, 10b: horizontal, 11b: free
-**/
-static uint8_t get_pointer_dragscroll_mode(void) {
-    return g_paw3222_config.dragscroll_mode;
-}
-
-/**
-    Set drag scroll mode.
-    @param [in] mode    00b: off, 01b: vertical, 10b: horizontal, 11b: free.
-**/
-static void set_pointer_dragscroll_mode(uint8_t mode) {
-    g_paw3222_config.dragscroll_mode = mode & 0b11;
-}
 
 // CPI values
 enum cpi_values {
@@ -203,69 +171,11 @@ uint8_t read_pid_paw3222(void) { return paw3222_read_reg(REG_PID1); }
 
 report_mouse_t paw3222_get_report(report_mouse_t mouse_report) {
   report_paw3222_t data = paw3222_read();
-  uint8_t dragscroll_mode;
-  int16_t datax = 0;
-  int16_t datay = 0;
-
   if (data.isMotion) {
-    dragscroll_mode = get_pointer_dragscroll_mode();
-    // 45度回転
-    float angle = 60.0 * M_PI / 180.0;  // 45度をラジアンに
-    float cos_a = cosf(angle);
-    float sin_a = sinf(angle);
-    // x, y をfloatで計算
-    float x_rot = data.x * cos_a - data.y * sin_a;
-    float y_rot = data.x * cos_a + data.y * sin_a;
-    // intに丸める
-    datax = (int16_t)lroundf(x_rot);
-    datay = (int16_t)lroundf(y_rot);
+    pd_dprintf("Raw ] X: %d, Y: %d\n", data.x, data.y);
 
-    
-    if (dragscroll_mode) {
-      // Drag scroll movement
-      datax = datax;
-      datay = datay;
-
-      // Support rotation of the sensor data
-#     if defined(POINTING_DEVICE_ROTATION_90)
-      datax = datay;
-      datay = -datax;
-#     elif defined(POINTING_DEVICE_ROTATION_180)
-      datax = -datax;
-      datay = -datay;
-#     elif defined(POINTING_DEVICE_ROTATION_270)
-      datax = -datay;
-      datay = datax;
-#     else
-      datax = datax;
-      datay = datay;
-#     endif
-
-      // Support Inverting the X and Y Axises
-#     if defined(POINTING_DEVICE_INVERT_X)
-      datax = -datax;
-#     endif
-#     if defined POINTING_DEVICE_INVERT_Y
-      datay = -datay;
-#     endif
-
-      pd_dprintf("Drag ] H: %d, V: %d\n", datax, datay);
-      if (dragscroll_mode & DRGSCRL_MODE_HOR) {
-        if (datax >= 0) mouse_report.h = (datax - 1 + PAW3222_DRGSCRL_REDUCTION_RATIO) / PAW3222_DRGSCRL_REDUCTION_RATIO;
-        else            mouse_report.h = (datax + 1 - PAW3222_DRGSCRL_REDUCTION_RATIO) / PAW3222_DRGSCRL_REDUCTION_RATIO;
-      }
-      if (dragscroll_mode & DRGSCRL_MODE_VRT) {
-        if (datay >= 0) mouse_report.v = (datay - 1 + PAW3222_DRGSCRL_REDUCTION_RATIO) / PAW3222_DRGSCRL_REDUCTION_RATIO;
-        else            mouse_report.v = (datay + 1 - PAW3222_DRGSCRL_REDUCTION_RATIO) / PAW3222_DRGSCRL_REDUCTION_RATIO;
-      }
-    } else {
-      // Normal movement
-      // Apply rotation if needed
-      pd_dprintf("Raw ] X: %d, Y: %d\n", data.x, data.y);
-
-      mouse_report.x = datax;
-      mouse_report.y = datay;
-    }
+    mouse_report.x = data.x;
+    mouse_report.y = data.y;
   }
 
   return mouse_report;
@@ -280,20 +190,3 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
 uint16_t pointing_device_driver_get_cpi(void) { return paw3222_get_cpi(); }
 
 void pointing_device_driver_set_cpi(uint16_t cpi) { paw3222_set_cpi(cpi); }
-
-bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case DRGSCRL_V:
-            set_pointer_dragscroll_mode((record->event.pressed)? DRGSCRL_MODE_VRT: DRGSCRL_MODE_OFF);
-            break;
-        case DRGSCRL_H:
-            set_pointer_dragscroll_mode((record->event.pressed)? DRGSCRL_MODE_HOR: DRGSCRL_MODE_OFF);
-            break;
-        case DRGSCRL_F:
-            set_pointer_dragscroll_mode((record->event.pressed)? DRGSCRL_MODE_FRE: DRGSCRL_MODE_OFF);
-            break;
-        default:
-            break; // Process all other keycodes normally
-    }
-    return true;
-}

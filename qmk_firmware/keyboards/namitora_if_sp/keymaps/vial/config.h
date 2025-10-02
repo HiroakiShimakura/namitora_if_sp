@@ -1,11 +1,11 @@
 #pragma once
 
-#define VIAL_KEYBOARD_UID {0xc0, 0x2f, 0xfe, 0xfd, 0xed, 0xd9, 0x38, 0x8e}
+#define EE_HANDS
+#define VIAL_KEYBOARD_UID {0x18, 0x8f, 0x81, 0x08, 0x52, 0xef, 0x33, 0xcd}
 #define VIAL_TAP_DANCE_ENTRIES 8
 #define VIAL_COMBO_ENTRIES 8
 #define PICO_FLASH_SIZE_BYTES (1 * 1024 * 1024)
 #define SPLIT_POINTING_ENABLE
 #define POINTING_DEVICE_RIGHT
-#define POINTING_DEVICE_ROTATION_90   // 90度回転
 #define POINTING_DEVICE_INVERT_X
 #define POINTING_DEVICE_INVERT_Y
