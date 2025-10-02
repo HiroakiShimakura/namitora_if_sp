@@ -1,0 +1,18 @@
+{
+    "include": [
+        {
+            "keyboard": "namitora_if_sp",
+            "keymap": "vial",
+            "target": "uf2",
+            "flags": "EXTRAFLAGS=-DINIT_EE_HANDS_LEFT",
+            "name": "namitora_if_sp_vial_left"
+        },
+        {
+            "keyboard": "namitora_if_sp",
+            "keymap": "vial",
+            "target": "uf2",
+            "flags": "EXTRAFLAGS=-DINIT_EE_HANDS_RIGHT",
+            "name": "namitora_if_sp_vial_right"
+        }
+    ]
+}
